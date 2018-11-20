@@ -1,19 +1,19 @@
-#include <stdio.h>
-#include <stdlib.h>
-#include <string.h>
+/*
+ * test.c
+ *
+ *  Created on: Nov 20, 2018
+ *      Author: ezerbib
+ */
 
-static void horribly_unsafe_function(void)
+
+
+
+int my_fn_1()
 {
-    int i;
-    char buf[128];
-
-    for (i=0; i<1024; ++i)
-      buf[i] = 0xff;
+	return 1;
 }
 
-
-int main(int argc, char **argv)
+int my_fn_0()
 {
-    horribly_unsafe_function();
-    return 0;
+	return 0;
 }

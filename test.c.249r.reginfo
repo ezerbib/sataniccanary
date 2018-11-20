@@ -1,0 +1,102 @@
+
+;; Function my_fn_1 (my_fn_1, funcdef_no=0, decl_uid=1548, cgraph_uid=0, symbol_order=0)
+
+(note 5 0 2 2 [bb 2] NOTE_INSN_BASIC_BLOCK)
+(note 2 5 3 2 NOTE_INSN_FUNCTION_BEG)
+(insn 3 2 4 2 (set (reg/f:SI 89)
+        (mem/v/f/c:SI (symbol_ref:SI ("__stack_chk_guard") [flags 0x40] <var_decl 0x7fde9fe5e120 __stack_chk_guard>) [1 __stack_chk_guard+0 S4 A32])) "test.c":12 86 {*movsi_internal}
+     (nil))
+(insn 4 3 7 2 (set (mem/v/f/c:SI (plus:SI (reg/f:SI 20 frame)
+                (const_int -4 [0xfffffffffffffffc])) [1 D.1561+0 S4 A32])
+        (reg/f:SI 89)) "test.c":12 86 {*movsi_internal}
+     (nil))
+(insn 7 4 10 2 (set (reg:SI 87 [ _1 ])
+        (const_int 1 [0x1])) "test.c":13 86 {*movsi_internal}
+     (nil))
+(insn 10 7 14 2 (set (reg:SI 88 [ <retval> ])
+        (reg:SI 87 [ _1 ])) "test.c":13 86 {*movsi_internal}
+     (nil))
+(insn 14 10 15 2 (set (reg/i:SI 0 ax)
+        (reg:SI 88 [ <retval> ])) "test.c":14 86 {*movsi_internal}
+     (nil))
+(insn 15 14 16 2 (set (reg:SI 91)
+        (mem/v/f/c:SI (plus:SI (reg/f:SI 20 frame)
+                (const_int -4 [0xfffffffffffffffc])) [1 D.1561+0 S4 A32])) "test.c":14 86 {*movsi_internal}
+     (nil))
+(insn 16 15 17 2 (set (reg:SI 92)
+        (mem/v/f/c:SI (symbol_ref:SI ("__stack_chk_guard") [flags 0x40] <var_decl 0x7fde9fe5e120 __stack_chk_guard>) [1 __stack_chk_guard+0 S4 A32])) "test.c":14 86 {*movsi_internal}
+     (nil))
+(insn 17 16 18 2 (set (reg:CCZ 17 flags)
+        (compare:CCZ (reg:SI 91)
+            (reg:SI 92))) "test.c":14 11 {*cmpsi_1}
+     (nil))
+(jump_insn 18 17 24 2 (set (pc)
+        (if_then_else (eq (reg:CCZ 17 flags)
+                (const_int 0 [0]))
+            (label_ref 21)
+            (pc))) "test.c":14 682 {*jcc}
+     (nil)
+ -> 21)
+(note 24 18 19 3 [bb 3] NOTE_INSN_BASIC_BLOCK)
+(call_insn 19 24 21 3 (call (mem:QI (symbol_ref:SI ("__stack_chk_fail") [flags 0x41] <function_decl 0x7fde9fe62200 __stack_chk_fail>) [0 __stack_chk_fail S1 A8])
+        (const_int 0 [0])) "test.c":14 688 {*call}
+     (expr_list:REG_ARGS_SIZE (const_int 0 [0])
+        (expr_list:REG_NORETURN (const_int 0 [0])
+            (expr_list:REG_EH_REGION (const_int 0 [0])
+                (nil))))
+    (nil))
+(code_label 21 19 25 4 3 (nil) [1 uses])
+(note 25 21 22 4 [bb 4] NOTE_INSN_BASIC_BLOCK)
+(insn 22 25 0 4 (use (reg/i:SI 0 ax)) "test.c":14 -1
+     (nil))
+
+;; Function my_fn_0 (my_fn_0, funcdef_no=1, decl_uid=1550, cgraph_uid=1, symbol_order=1)
+
+(note 5 0 2 2 [bb 2] NOTE_INSN_BASIC_BLOCK)
+(note 2 5 3 2 NOTE_INSN_FUNCTION_BEG)
+(insn 3 2 4 2 (set (reg/f:SI 89)
+        (mem/v/f/c:SI (symbol_ref:SI ("__stack_chk_guard") [flags 0x40] <var_decl 0x7fde9fe5e120 __stack_chk_guard>) [1 __stack_chk_guard+0 S4 A32])) "test.c":17 86 {*movsi_internal}
+     (nil))
+(insn 4 3 7 2 (set (mem/v/f/c:SI (plus:SI (reg/f:SI 20 frame)
+                (const_int -4 [0xfffffffffffffffc])) [1 D.1564+0 S4 A32])
+        (reg/f:SI 89)) "test.c":17 86 {*movsi_internal}
+     (nil))
+(insn 7 4 10 2 (set (reg:SI 87 [ _1 ])
+        (const_int 0 [0])) "test.c":18 86 {*movsi_internal}
+     (nil))
+(insn 10 7 14 2 (set (reg:SI 88 [ <retval> ])
+        (reg:SI 87 [ _1 ])) "test.c":18 86 {*movsi_internal}
+     (nil))
+(insn 14 10 15 2 (set (reg/i:SI 0 ax)
+        (reg:SI 88 [ <retval> ])) "test.c":19 86 {*movsi_internal}
+     (nil))
+(insn 15 14 16 2 (set (reg:SI 91)
+        (mem/v/f/c:SI (plus:SI (reg/f:SI 20 frame)
+                (const_int -4 [0xfffffffffffffffc])) [1 D.1564+0 S4 A32])) "test.c":19 86 {*movsi_internal}
+     (nil))
+(insn 16 15 17 2 (set (reg:SI 92)
+        (mem/v/f/c:SI (symbol_ref:SI ("__stack_chk_guard") [flags 0x40] <var_decl 0x7fde9fe5e120 __stack_chk_guard>) [1 __stack_chk_guard+0 S4 A32])) "test.c":19 86 {*movsi_internal}
+     (nil))
+(insn 17 16 18 2 (set (reg:CCZ 17 flags)
+        (compare:CCZ (reg:SI 91)
+            (reg:SI 92))) "test.c":19 11 {*cmpsi_1}
+     (nil))
+(jump_insn 18 17 24 2 (set (pc)
+        (if_then_else (eq (reg:CCZ 17 flags)
+                (const_int 0 [0]))
+            (label_ref 21)
+            (pc))) "test.c":19 682 {*jcc}
+     (nil)
+ -> 21)
+(note 24 18 19 3 [bb 3] NOTE_INSN_BASIC_BLOCK)
+(call_insn 19 24 21 3 (call (mem:QI (symbol_ref:SI ("__stack_chk_fail") [flags 0x41] <function_decl 0x7fde9fe62200 __stack_chk_fail>) [0 __stack_chk_fail S1 A8])
+        (const_int 0 [0])) "test.c":19 688 {*call}
+     (expr_list:REG_ARGS_SIZE (const_int 0 [0])
+        (expr_list:REG_NORETURN (const_int 0 [0])
+            (expr_list:REG_EH_REGION (const_int 0 [0])
+                (nil))))
+    (nil))
+(code_label 21 19 25 4 6 (nil) [1 uses])
+(note 25 21 22 4 [bb 4] NOTE_INSN_BASIC_BLOCK)
+(insn 22 25 0 4 (use (reg/i:SI 0 ax)) "test.c":19 -1
+     (nil))

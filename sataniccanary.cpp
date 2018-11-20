@@ -62,14 +62,40 @@
  * this program; if not, see <http://www.gnu.org/licenses/gpl-2.0.html>
  ******************************************************************************/
 
+#include "gcc-plugin.h"
+#include "plugin-version.h"
+
+//#include <gimple.h>
+//#include <tree.h>
+//#include <tree-pass.h>
+//#include <rtl.h>
+//#include <emit-rtl.h>
+
+#include "rtl.h"
+#include "memmodel.h"
+#include "emit-rtl.h"
+
+#include "tree.h"
+#include "tree-pass.h"
+#include "context.h"
+#include "function.h"
+#include "gimple-pretty-print.h"
+
+#include "target.h"
+#include "stringpool.h"
+#include "attribs.h"
+
+#include <stdint.h>
 #include <stdio.h>
-#include <coretypes.h>
-#include <gcc-plugin.h>
-#include <gimple.h>
-#include <tree.h>
-#include <tree-pass.h>
-#include <rtl.h>
-#include <emit-rtl.h>
+#include <iostream>
+#include <string>
+#include <sstream>
+#include <fstream>
+
+enum {
+        SUCCESS = 0,    /* success; return value */
+        FAILURE = 1       /* failed; return value */
+};
 
 
 /* Printing and debugging aids */
@@ -82,7 +108,7 @@
 
 
 /* Bendover */
-int plugin_is_GPL_compatible = 0;
+//int plugin_is_GPL_compatible = 0;
 
 
 /* For the plugin.  This will try to canary-fy each function (to make the
@@ -132,14 +158,13 @@ static void setup_basic_canary(rtx insn)
     rng_guard_value = rand();
     
     /* mov $<rand>, %rax */
-    mov = gen_rtx_SET(DImode, 
-        gen_rtx_REG(DImode, 0),
+    mov = gen_rtx_SET( gen_rtx_REG(DImode, 0),
         gen_rtx_CONST_INT(VOIDmode, rng_guard_value));
     
     /* push %rax */
     dec = gen_rtx_PRE_DEC(DImode, stack_pointer_rtx);
     mem = gen_rtx_MEM(DImode, dec);
-    psh = gen_rtx_SET(DImode, mem, gen_rtx_REG(DImode, 0));
+    psh = gen_rtx_SET(mem, gen_rtx_REG(DImode, 0));
             
     emit_insn_before(mov, insn);
     emit_insn_before(psh, insn);
@@ -150,19 +175,20 @@ static void setup_basic_canary(rtx insn)
 static void finish_basic_canary(rtx insn)
 {
     /* Get the canary from stack and put it into %rax */
-    rtx last, mem, rbx, tmp, label;
+    rtx  mem, rbx, tmp, label;
+    rtx_insn *last;
 
     /* pop %rbx */
     rbx = gen_rtx_POST_INC(DImode, stack_pointer_rtx);
     mem = gen_rtx_MEM(DImode, rbx);
-    tmp = gen_rtx_SET(DImode, gen_rtx_REG(DImode, 1), mem);
+    tmp = gen_rtx_SET(gen_rtx_REG(DImode, 1), mem);
     last = emit_insn_after(tmp, insn);
 
     /* cmp $666, %rbx */
     tmp = gen_rtx_COMPARE(CCmode,
         gen_rtx_REG(DImode, 1),
         gen_rtx_CONST_INT(VOIDmode, rng_guard_value));
-    tmp = gen_rtx_SET(VOIDmode, gen_rtx_REG(CCmode, FLAGS_REG), tmp);
+    tmp = gen_rtx_SET(gen_rtx_REG(CCmode, FLAGS_REG), tmp);
     last = emit_insn_after(tmp, last);
 
     /* jeq */
@@ -172,7 +198,7 @@ static void finish_basic_canary(rtx insn)
         tmp,                                 /* cmp               */
         gen_rtx_LABEL_REF(VOIDmode, label),  /* Ifeq              */
         pc_rtx);                             /* Else (do nothing) */
-    last = emit_jump_insn_after(gen_rtx_SET(VOIDmode, pc_rtx, tmp), last);
+    last = emit_jump_insn_after(gen_rtx_SET(pc_rtx, tmp), last);
     JUMP_LABEL(last) = label;
 
     /* Call abort() */
@@ -207,7 +233,7 @@ static void setup_tsc_canary(rtx insn)
      */
     psh = gen_rtx_PRE_DEC(DImode, stack_pointer_rtx);
     psh = gen_rtx_MEM(DImode, psh);
-    psh = gen_rtx_SET(DImode, psh, gen_rtx_REG(DImode, 0));
+    psh = gen_rtx_SET(psh, gen_rtx_REG(DImode, 0));
     emit_insn_before(psh, insn);
     emit_insn_before(psh, insn);
 }
@@ -218,21 +244,22 @@ static void setup_tsc_canary(rtx insn)
  */
 static void finish_tsc_canary(rtx insn)
 {
-    rtx pop, mem, cmp, jmp, label, last, call;
+    rtx pop, mem, cmp, jmp, label,  call;
+    rtx_insn *last;
 
     /* pop %rbx, pop %rcx (rax has the return value) */
     mem = gen_rtx_POST_INC(DImode, stack_pointer_rtx);
     mem = gen_rtx_MEM(DImode, mem);
-    pop = gen_rtx_SET(DImode, gen_rtx_REG(DImode, 1), mem);
+    pop = gen_rtx_SET(gen_rtx_REG(DImode, 1), mem);
     last = emit_insn_after(pop, insn);
-    pop = gen_rtx_SET(DImode, gen_rtx_REG(DImode, 2), mem);
+    pop = gen_rtx_SET(gen_rtx_REG(DImode, 2), mem);
     last = emit_insn_after(pop, last);
 
     /* cmp %rbx, %rcx */
     cmp = gen_rtx_COMPARE(CCmode,
         gen_rtx_REG(DImode, 1),
         gen_rtx_REG(DImode, 2));
-    cmp = gen_rtx_SET(VOIDmode, gen_rtx_REG(CCmode, FLAGS_REG), cmp);
+    cmp = gen_rtx_SET(gen_rtx_REG(CCmode, FLAGS_REG), cmp);
     last = emit_insn_after(cmp, last);
 
     /* jeq */
@@ -242,7 +269,7 @@ static void finish_tsc_canary(rtx insn)
         jmp,
         gen_rtx_LABEL_REF(VOIDmode, label),
         pc_rtx);
-    jmp = gen_rtx_SET(VOIDmode, pc_rtx, jmp);
+    jmp = gen_rtx_SET(pc_rtx, jmp);
     last = emit_jump_insn_after(jmp, last);
     JUMP_LABEL(last) = label;
 
@@ -259,7 +286,7 @@ static void finish_tsc_canary(rtx insn)
  */
 static void setup_tscdata_canary(rtx insn)
 {
-    rtx tsc, psh, and, xor, eax, ebx, ecx, tmp;
+    rtx tsc, psh, _and, _xor, eax, ebx, ecx, tmp;
     rtvec av, cv, lv;
 
     av = rtvec_alloc(0);
@@ -279,7 +306,7 @@ static void setup_tscdata_canary(rtx insn)
     /* push low 32bits of rdtsc */
     psh = gen_rtx_PRE_DEC(DImode, stack_pointer_rtx);
     psh = gen_rtx_MEM(DImode, psh);
-    psh = gen_rtx_SET(DImode, psh, eax);
+    psh = gen_rtx_SET(psh, eax);
     emit_insn_before(psh, insn);
 
     /* Treat the low 32bits of rdtsc as a random value.  We will mask out all
@@ -291,10 +318,10 @@ static void setup_tscdata_canary(rtx insn)
      * To simulate a "random" data address to use, we use the low 8 bits of the
      * TSC in EAX.  But we still need full eax 32bits, so copy eax into ebx.
      */
-    tmp = gen_rtx_SET(DImode, ebx, eax);
+    tmp = gen_rtx_SET(ebx, eax);
     emit_insn_before(tmp, insn);
-    and = gen_anddi3(ebx, ebx, GEN_INT(0x000F));
-    emit_insn_before(and, insn);
+    _and = gen_anddi3(ebx, ebx, GEN_INT(0x000F));
+    emit_insn_before(_and, insn);
 
     /* Now get some data from the readonly data segment
      * mov %CS:$rbx, %rcx
@@ -302,17 +329,17 @@ static void setup_tscdata_canary(rtx insn)
     tmp = gen_rtx_ASM_OPERANDS(VOIDmode, "mov %%cs, %%rcx", "", 0, av, cv, lv,
                                expand_location(RTL_LOCATION(insn)).line);
     emit_insn_before(tmp, insn);
-    tmp = gen_rtx_SET(DImode, ecx, gen_rtx_PLUS(DImode, ecx, ebx));
+    tmp = gen_rtx_SET(ecx, gen_rtx_PLUS(DImode, ecx, ebx));
     emit_insn_before(tmp, insn);
 
     /* xor %rcx, %rax */
-    xor = gen_xordi3(ecx, ecx, eax);
-    emit_insn_before(xor, insn);
+    _xor = gen_xordi3(ecx, ecx, eax);
+    emit_insn_before(_xor, insn);
 
     /* push %rcx */
     psh = gen_rtx_PRE_DEC(DImode, stack_pointer_rtx);
     psh = gen_rtx_MEM(DImode, psh);
-    psh = gen_rtx_SET(DImode, psh, ecx);
+    psh = gen_rtx_SET(psh, ecx);
     emit_insn_before(psh, insn);
 }
 
@@ -323,8 +350,9 @@ static void setup_tscdata_canary(rtx insn)
  */
 static void finish_tscdata_canary(rtx insn)
 {
-    rtx and, psh, pop, mem, eax, ebx, ecx, edx;
-    rtx last, xor, cmp, jmp, label, call;
+    rtx _and, psh, pop, mem, eax, ebx, ecx, edx;
+    rtx _xor, cmp, jmp, label, call;
+    rtx_insn *last;
     rtvec av, cv, lv;
 
     /* Convenience */
@@ -339,15 +367,15 @@ static void finish_tscdata_canary(rtx insn)
     /* Now pop the values off the stack (TSC xor DATA) and then TSC */
     mem = gen_rtx_POST_INC(DImode, stack_pointer_rtx);
     mem = gen_rtx_MEM(DImode, mem);
-    pop = gen_rtx_SET(DImode, edx, mem);  /* TSC xor DATA */
+    pop = gen_rtx_SET(edx, mem);  /* TSC xor DATA */
     last = emit_insn_after(pop, insn);
-    pop = gen_rtx_SET(DImode, ebx, mem);  /* TSC */
+    pop = gen_rtx_SET(ebx, mem);  /* TSC */
     last = emit_insn_after(pop, last);
 
     /* Push eax so we can save the return value (we need the register) */
     psh = gen_rtx_PRE_DEC(DImode, stack_pointer_rtx);
     psh = gen_rtx_MEM(DImode, psh);
-    psh = gen_rtx_SET(DImode, psh, eax);
+    psh = gen_rtx_SET(psh, eax);
     last = emit_insn_after(psh, last);
 
     /* Now get the DATA value CS:(tsc-based-offset) and put it in ecx.
@@ -356,32 +384,32 @@ static void finish_tscdata_canary(rtx insn)
      * resulting value as an offset to the code segment.  This value is called
      * the DATA which we xor against the TSC.
      */
-    mem = gen_rtx_SET(DImode, eax, ebx);           /* mov %ebx, $eax */
+    mem = gen_rtx_SET(eax, ebx);           /* mov %ebx, $eax */
     last = emit_insn_after(mem, last);
-    and = gen_anddi3(eax, eax, GEN_INT(0x000F));   /* and %eax, $0x000f */
-    last = emit_insn_after(and, last);
+    _and = gen_anddi3(eax, eax, GEN_INT(0x000F));   /* and %eax, $0x000f */
+    last = emit_insn_after(_and, last);
     mem = gen_rtx_ASM_OPERANDS(VOIDmode, "mov %%cs, %%rcx", "", 0, av, cv, lv,
                                expand_location(RTL_LOCATION(insn)).line);
     last = emit_insn_after(mem, last);
-    mem = gen_rtx_SET(DImode, ecx, gen_rtx_PLUS(DImode, ecx, eax));
+    mem = gen_rtx_SET(ecx, gen_rtx_PLUS(DImode, ecx, eax));
     last = emit_insn_after(mem, last); /* add %eax, %ecx */
 
     /* Restore the return value (put 'er back into rax) */
     mem = gen_rtx_POST_INC(DImode, stack_pointer_rtx);
     mem = gen_rtx_MEM(DImode, mem);
-    pop = gen_rtx_SET(DImode, eax, mem);  /* Return value */
+    pop = gen_rtx_SET(eax, mem);  /* Return value */
     last = emit_insn_after(pop, last);
 
     /* Now xor (TSC xor DATA) and DATA */
-    xor = gen_xordi3(ecx, ecx, edx);
-    last = emit_insn_after(xor, last);
+    _xor = gen_xordi3(ecx, ecx, edx);
+    last = emit_insn_after(_xor, last);
 
     /* Now compare the xor'd value (ecx) and the originally push'd low 32bits of
      * the TSC (ebx) (they should match)
      * cmp %rcx, %rbx 
      */
     cmp = gen_rtx_COMPARE(CCmode, ecx, ebx);
-    cmp = gen_rtx_SET(VOIDmode, gen_rtx_REG(CCmode, FLAGS_REG), cmp);
+    cmp = gen_rtx_SET(gen_rtx_REG(CCmode, FLAGS_REG), cmp);
     last = emit_insn_after(cmp, last);
 
     /* jeq */
@@ -389,7 +417,7 @@ static void finish_tscdata_canary(rtx insn)
     jmp = gen_rtx_EQ(VOIDmode, gen_rtx_REG(CCmode, FLAGS_REG), const0_rtx);
     jmp = gen_rtx_IF_THEN_ELSE(
         VOIDmode, jmp, gen_rtx_LABEL_REF(VOIDmode, label), pc_rtx);
-    jmp = gen_rtx_SET(VOIDmode, pc_rtx, jmp);
+    jmp = gen_rtx_SET(pc_rtx, jmp);
     last = emit_jump_insn_after(jmp, last);
     JUMP_LABEL(last) = label;
 
@@ -401,10 +429,11 @@ static void finish_tscdata_canary(rtx insn)
 }
 
 
-static unsigned sataniccanary_exec(void)
+static unsigned int
+sataniccanary_exec(function *fun)
 {
     int idx;
-    rtx insn;
+    rtx_insn *insn;
 
     P("Adding canary to: %s", get_name(cfun->decl));
 
@@ -425,7 +454,10 @@ static unsigned sataniccanary_exec(void)
     return 0;
 }
 
+int plugin_is_GPL_compatible;
 
+namespace {
+#if 0
 static struct rtl_opt_pass sataniccanary = 
 {
     .pass.type = RTL_PASS,
@@ -434,13 +466,82 @@ static struct rtl_opt_pass sataniccanary =
     .pass.execute = sataniccanary_exec,
     .pass.todo_flags_finish = TODO_dump_func,
 };
+#endif
+
+const pass_data pass_data_retguard =
+{
+  RTL_PASS,      /* type */
+  "sataniccanary",          /* name */
+  OPTGROUP_NONE, /* optinfo_flags */
+  TV_NONE,       /* tv_id */
+  PROP_rtl,      /* properties_required */
+  0,             /* properties_provided */
+  0,             /* properties_destroyed */
+  0,             /* todo_flags_start */
+  0,             /* todo_flags_finish */
+
+};
+
+class pass_retguard : public rtl_opt_pass
+{
+ public:
+  pass_retguard(gcc::context *ctxt)
+      : rtl_opt_pass(pass_data_retguard, ctxt)
+  {}
+
+  /* opt_pass methods: */
+  virtual bool gate (function *)
+  {
+        if (flag_stack_protect == 2)
+//              std::cout << " Protect all " << std::endl;
+
+
+        if ( crtl->stack_protect_guard )
+        {
+//              std::cout << "crtl->stack_protect_guard  " << crtl->stack_protect_guard << " " << std::endl;
+
+        }
+        //if (flag_stack_check == GENERIC_STACK_CHECK)
+        //      std::cout << "flag_stack_check  = GENERIC  " << flag_stack_check << " " << std::endl;
+//      auto x = crtl->stack_protect_guard     && (flag_stack_protect);
+
+        if (crtl->stack_protect_guard && targetm.stack_protect_runtime_enabled_p ())
+        {
+                //std::cout << " Chani Shiloni " << std::endl;
+        }
+
+
+        if (lookup_attribute ("stack_protector", DECL_ATTRIBUTES (cfun->decl)))
+        {
+                //std::cout << "aaaaaaaaaaa" << flag_stack_check << std::endl;
+        }
+//              std::cout << "aaaaaaaaaaa" << flag_stack_check << std::endl;
+        return true;
+  }
+
+  unsigned int execute (function *fun)
+  {
+	  return sataniccanary_exec(fun);
+  }
+
+}; /* class pass_retguard */
+
+} /* anon namespace */
+
+static rtl_opt_pass *
+make_pass_retguard(gcc::context *ctxt)
+{
+  return new pass_retguard(ctxt);
+}
 
 
 /* Return 0 on success or error code on failure */
-int plugin_init(
-    struct plugin_name_args   *info,  /* Argument info  */
-    struct plugin_gcc_version *ver)   /* Version of GCC */
+int
+plugin_init(struct plugin_name_args *plugin_info,
+            struct plugin_gcc_version *version)
+
 {
+#if 0
     struct register_pass_info pass = 
     {
         .pass = &sataniccanary.pass,
@@ -448,10 +549,38 @@ int plugin_init(
         .ref_pass_instance_number = 0,
         .pos_op = PASS_POS_INSERT_AFTER,
     };
+#endif
 
     /* Some canaries (basic canary) call rand() */
     srand(time(NULL));
+    struct register_pass_info pass_info;
 
-    register_callback("sataniccanary", PLUGIN_PASS_MANAGER_SETUP, NULL, &pass);
+    if (!plugin_default_version_check(version, &gcc_version))
+      return FAILURE;
+
+
+    for (int i = 0; i < plugin_info->argc; i++)
+    {
+          if (strcmp (plugin_info->argv[i].key, "debug") == 0)
+          {
+                  std::cout << " TLS plugin " << std::endl;
+
+          }
+
+          std::cerr << "Argument " << i << ": Key: " << plugin_info->argv[i].
+          key << ". Value: " << plugin_info->argv[i].value << "\n";
+    }
+
+    pass_info.pass = make_pass_retguard(g);
+    pass_info.pass->static_pass_number = 0;
+
+   // pass_info.reference_pass_name = "vartrack";
+   // pass_info.reference_pass_name = "pro_and_epilogue";
+    //pass_info.reference_pass_name = "rtl_dce";
+    pass_info.reference_pass_name = "expand";
+    pass_info.ref_pass_instance_number = 1;
+    pass_info.pos_op = PASS_POS_INSERT_AFTER;
+
+    register_callback("sataniccanary", PLUGIN_PASS_MANAGER_SETUP, NULL, &pass_info);
     return 0;
 }
