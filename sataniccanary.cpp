@@ -507,15 +507,12 @@ class pass_retguard : public rtl_opt_pass
 
         if (crtl->stack_protect_guard && targetm.stack_protect_runtime_enabled_p ())
         {
-                //std::cout << " Chani Shiloni " << std::endl;
         }
 
 
         if (lookup_attribute ("stack_protector", DECL_ATTRIBUTES (cfun->decl)))
         {
-                //std::cout << "aaaaaaaaaaa" << flag_stack_check << std::endl;
         }
-//              std::cout << "aaaaaaaaaaa" << flag_stack_check << std::endl;
         return true;
   }
 

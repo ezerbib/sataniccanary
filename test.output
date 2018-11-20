@@ -3,10 +3,11 @@
 
 (note # 0 0 NOTE_INSN_DELETED)
 (note # 0 0 [bb 2] NOTE_INSN_BASIC_BLOCK)
-(insn/f # 0 0 2 (set (mem:SI (pre_dec:SI (reg/f:SI 7 sp)) [  S4 A8])
+(note # 0 0 NOTE_INSN_FUNCTION_BEG)
+(insn/f:TI # 0 0 2 (set (mem:SI (pre_dec:SI (reg/f:SI 7 sp)) [  S4 A8])
         (reg/f:SI 6 bp)) "test.c":12# {*pushsi2}
      (nil))
-(insn/f # 0 0 2 (set (reg/f:SI 6 bp)
+(insn/f:TI # 0 0 2 (set (reg/f:SI 6 bp)
         (reg/f:SI 7 sp)) "test.c":12# {*movsi_internal}
      (nil))
 (insn/f # 0 0 2 (parallel [
@@ -16,52 +17,41 @@
             (clobber (reg:CC 17 flags))
             (clobber (mem:BLK (scratch) [  A8]))
         ]) "test.c":12# {pro_epilogue_adjust_stack_si_add}
-     (nil))
+     (expr_list:REG_UNUSED (reg:CC 17 flags)
+        (nil)))
 (note # 0 0 NOTE_INSN_PROLOGUE_END)
-(note # 0 0 NOTE_INSN_FUNCTION_BEG)
-(insn # 0 0 2 (set (reg/f:SI 0 ax [89])
+(insn # 0 0 2 (set (reg/f:SI 0 ax [orig:88 __stack_chk_guard ] [88])
         (mem/v/f/c:SI (symbol_ref:SI ("__stack_chk_guard") [flags 0x40] <var_decl # __stack_chk_guard>) [ __stack_chk_guard+0 S4 A32])) "test.c":12# {*movsi_internal}
      (nil))
-(insn # 0 0 2 (set (mem/v/f/c:SI (plus:SI (reg/f:SI 6 bp)
-                (const_int -12 [0xfffffffffffffff4])) [ D.1561+0 S4 A32])
-        (reg/f:SI 0 ax [89])) "test.c":12# {*movsi_internal}
-     (nil))
-(insn # 0 0 2 (set (reg:SI 0 ax [orig:87 _1 ] [87])
-        (const_int 1 [0x1])) "test.c":13# {*movsi_internal}
-     (nil))
-(insn # 0 0 2 (set (reg:SI 2 cx [91])
+(insn:TI # 0 0 2 (set (mem/v/f/c:SI (plus:SI (reg/f:SI 6 bp)
+                (const_int -12 [0xfffffffffffffff4])) [ D.1565+0 S4 A32])
+        (reg/f:SI 0 ax [orig:88 __stack_chk_guard ] [88])) "test.c":12# {*movsi_internal}
+     (expr_list:REG_DEAD (reg/f:SI 0 ax [orig:88 __stack_chk_guard ] [88])
+        (nil)))
+(insn # 0 0 2 (set (reg/f:SI 2 cx [orig:90 D.1565 ] [90])
         (mem/v/f/c:SI (plus:SI (reg/f:SI 6 bp)
-                (const_int -12 [0xfffffffffffffff4])) [ D.1561+0 S4 A32])) "test.c":14# {*movsi_internal}
+                (const_int -12 [0xfffffffffffffff4])) [ D.1565+0 S4 A32])) "test.c":14# {*movsi_internal}
      (nil))
-(insn # 0 0 2 (set (reg:SI 1 dx [92])
+(insn:TI # 0 0 2 (set (reg/f:SI 1 dx [orig:91 __stack_chk_guard ] [91])
         (mem/v/f/c:SI (symbol_ref:SI ("__stack_chk_guard") [flags 0x40] <var_decl # __stack_chk_guard>) [ __stack_chk_guard+0 S4 A32])) "test.c":14# {*movsi_internal}
      (nil))
-(insn # 0 0 2 (set (reg:CCZ 17 flags)
-        (compare:CCZ (reg:SI 2 cx [91])
-            (reg:SI 1 dx [92]))) "test.c":14# {*cmpsi_1}
-     (nil))
+(insn:TI # 0 0 2 (set (reg:CCZ 17 flags)
+        (compare:CCZ (reg/f:SI 2 cx [orig:90 D.1565 ] [90])
+            (reg/f:SI 1 dx [orig:91 __stack_chk_guard ] [91]))) "test.c":14# {*cmpsi_1}
+     (expr_list:REG_DEAD (reg/f:SI 2 cx [orig:90 D.1565 ] [90])
+        (expr_list:REG_DEAD (reg/f:SI 1 dx [orig:91 __stack_chk_guard ] [91])
+            (nil))))
 (jump_insn # 0 0 2 (set (pc)
-        (if_then_else (eq (reg:CCZ 17 flags)
+        (if_then_else (ne (reg:CCZ 17 flags)
                 (const_int 0 [0]))
-            (label_ref #)
+            (label_ref:SI #)
             (pc))) "test.c":14# {*jcc}
-     (nil)
- -> 3)
+     (expr_list:REG_DEAD (reg:CCZ 17 flags)
+        (int_list:REG_BR_PROB 429500 (nil)))
+ -> 5)
 (note # 0 0 [bb 3] NOTE_INSN_BASIC_BLOCK)
-(call_insn # 0 0 3 (call (mem:QI (symbol_ref:SI ("__stack_chk_fail") [flags 0x41] <function_decl # __stack_chk_fail>) [ __stack_chk_fail S1 A8])
-        (const_int 0 [0])) "test.c":14# {*call}
-     (expr_list:REG_ARGS_SIZE (const_int 0 [0])
-        (expr_list:REG_NORETURN (const_int 0 [0])
-            (expr_list:REG_EH_REGION (const_int 0 [0])
-                (nil))))
-    (nil))
-(barrier # 0 0)
-(code_label # 0 0 4 3 (nil) [1 uses])
-(note # 0 0 [bb 4] NOTE_INSN_BASIC_BLOCK)
-(insn # 0 0 4 (use (reg/i:SI 0 ax)) "test.c":14#
-     (nil))
 (note # 0 0 NOTE_INSN_EPILOGUE_BEG)
-(insn/f # 0 0 4 (parallel [
+(insn/f:TI # 0 0 3 (parallel [
             (set (reg/f:SI 7 sp)
                 (plus:SI (reg/f:SI 6 bp)
                     (const_int 4 [0x4])))
@@ -73,9 +63,25 @@
         (expr_list:REG_CFA_DEF_CFA (plus:SI (reg/f:SI 7 sp)
                 (const_int 4 [0x4]))
             (nil))))
-(jump_insn # 0 0 4 (simple_return) "test.c":14# {simple_return_internal}
+(insn # 0 0 3 (set (reg/i:SI 0 ax)
+        (const_int 1 [0x1]))# {*movsi_internal}
+     (nil))
+(insn # 0 0 3 (use (reg/i:SI 0 ax)) "test.c":14#
+     (nil))
+(jump_insn:TI # 0 0 3 (simple_return) "test.c":14# {simple_return_internal}
      (nil)
  -> simple_return)
+(barrier # 0 0)
+(code_label # 0 0 4 5 (nil) [1 uses])
+(note # 0 0 [bb 4] NOTE_INSN_BASIC_BLOCK)
+(call_insn:TI # 0 0 4 (call (mem:QI (symbol_ref:SI ("__stack_chk_fail") [flags 0x41] <function_decl # __stack_chk_fail>) [ __stack_chk_fail S1 A8])
+        (const_int 0 [0])) "test.c":14# {*call}
+     (expr_list:REG_CALL_DECL (symbol_ref:SI ("__stack_chk_fail") [flags 0x41] <function_decl # __stack_chk_fail>)
+        (expr_list:REG_ARGS_SIZE (const_int 0 [0])
+            (expr_list:REG_NORETURN (const_int 0 [0])
+                (expr_list:REG_EH_REGION (const_int 0 [0])
+                    (nil)))))
+    (nil))
 (barrier # 0 0)
 (note # 0 0 NOTE_INSN_DELETED)
 
@@ -83,10 +89,11 @@
 
 (note # 0 0 NOTE_INSN_DELETED)
 (note # 0 0 [bb 2] NOTE_INSN_BASIC_BLOCK)
-(insn/f # 0 0 2 (set (mem:SI (pre_dec:SI (reg/f:SI 7 sp)) [  S4 A8])
+(note # 0 0 NOTE_INSN_FUNCTION_BEG)
+(insn/f:TI # 0 0 2 (set (mem:SI (pre_dec:SI (reg/f:SI 7 sp)) [  S4 A8])
         (reg/f:SI 6 bp)) "test.c":17# {*pushsi2}
      (nil))
-(insn/f # 0 0 2 (set (reg/f:SI 6 bp)
+(insn/f:TI # 0 0 2 (set (reg/f:SI 6 bp)
         (reg/f:SI 7 sp)) "test.c":17# {*movsi_internal}
      (nil))
 (insn/f # 0 0 2 (parallel [
@@ -96,52 +103,41 @@
             (clobber (reg:CC 17 flags))
             (clobber (mem:BLK (scratch) [  A8]))
         ]) "test.c":17# {pro_epilogue_adjust_stack_si_add}
-     (nil))
+     (expr_list:REG_UNUSED (reg:CC 17 flags)
+        (nil)))
 (note # 0 0 NOTE_INSN_PROLOGUE_END)
-(note # 0 0 NOTE_INSN_FUNCTION_BEG)
-(insn # 0 0 2 (set (reg/f:SI 0 ax [89])
+(insn # 0 0 2 (set (reg/f:SI 0 ax [orig:88 __stack_chk_guard ] [88])
         (mem/v/f/c:SI (symbol_ref:SI ("__stack_chk_guard") [flags 0x40] <var_decl # __stack_chk_guard>) [ __stack_chk_guard+0 S4 A32])) "test.c":17# {*movsi_internal}
      (nil))
-(insn # 0 0 2 (set (mem/v/f/c:SI (plus:SI (reg/f:SI 6 bp)
-                (const_int -12 [0xfffffffffffffff4])) [ D.1564+0 S4 A32])
-        (reg/f:SI 0 ax [89])) "test.c":17# {*movsi_internal}
-     (nil))
-(insn # 0 0 2 (set (reg:SI 0 ax [orig:87 _1 ] [87])
-        (const_int 0 [0])) "test.c":18# {*movsi_internal}
-     (nil))
-(insn # 0 0 2 (set (reg:SI 2 cx [91])
+(insn:TI # 0 0 2 (set (mem/v/f/c:SI (plus:SI (reg/f:SI 6 bp)
+                (const_int -12 [0xfffffffffffffff4])) [ D.1570+0 S4 A32])
+        (reg/f:SI 0 ax [orig:88 __stack_chk_guard ] [88])) "test.c":17# {*movsi_internal}
+     (expr_list:REG_DEAD (reg/f:SI 0 ax [orig:88 __stack_chk_guard ] [88])
+        (nil)))
+(insn # 0 0 2 (set (reg/f:SI 2 cx [orig:90 D.1570 ] [90])
         (mem/v/f/c:SI (plus:SI (reg/f:SI 6 bp)
-                (const_int -12 [0xfffffffffffffff4])) [ D.1564+0 S4 A32])) "test.c":19# {*movsi_internal}
+                (const_int -12 [0xfffffffffffffff4])) [ D.1570+0 S4 A32])) "test.c":19# {*movsi_internal}
      (nil))
-(insn # 0 0 2 (set (reg:SI 1 dx [92])
+(insn:TI # 0 0 2 (set (reg/f:SI 1 dx [orig:91 __stack_chk_guard ] [91])
         (mem/v/f/c:SI (symbol_ref:SI ("__stack_chk_guard") [flags 0x40] <var_decl # __stack_chk_guard>) [ __stack_chk_guard+0 S4 A32])) "test.c":19# {*movsi_internal}
      (nil))
-(insn # 0 0 2 (set (reg:CCZ 17 flags)
-        (compare:CCZ (reg:SI 2 cx [91])
-            (reg:SI 1 dx [92]))) "test.c":19# {*cmpsi_1}
-     (nil))
+(insn:TI # 0 0 2 (set (reg:CCZ 17 flags)
+        (compare:CCZ (reg/f:SI 2 cx [orig:90 D.1570 ] [90])
+            (reg/f:SI 1 dx [orig:91 __stack_chk_guard ] [91]))) "test.c":19# {*cmpsi_1}
+     (expr_list:REG_DEAD (reg/f:SI 2 cx [orig:90 D.1570 ] [90])
+        (expr_list:REG_DEAD (reg/f:SI 1 dx [orig:91 __stack_chk_guard ] [91])
+            (nil))))
 (jump_insn # 0 0 2 (set (pc)
-        (if_then_else (eq (reg:CCZ 17 flags)
+        (if_then_else (ne (reg:CCZ 17 flags)
                 (const_int 0 [0]))
-            (label_ref #)
+            (label_ref:SI #)
             (pc))) "test.c":19# {*jcc}
-     (nil)
- -> 6)
+     (expr_list:REG_DEAD (reg:CCZ 17 flags)
+        (int_list:REG_BR_PROB 429500 (nil)))
+ -> 9)
 (note # 0 0 [bb 3] NOTE_INSN_BASIC_BLOCK)
-(call_insn # 0 0 3 (call (mem:QI (symbol_ref:SI ("__stack_chk_fail") [flags 0x41] <function_decl # __stack_chk_fail>) [ __stack_chk_fail S1 A8])
-        (const_int 0 [0])) "test.c":19# {*call}
-     (expr_list:REG_ARGS_SIZE (const_int 0 [0])
-        (expr_list:REG_NORETURN (const_int 0 [0])
-            (expr_list:REG_EH_REGION (const_int 0 [0])
-                (nil))))
-    (nil))
-(barrier # 0 0)
-(code_label # 0 0 4 6 (nil) [1 uses])
-(note # 0 0 [bb 4] NOTE_INSN_BASIC_BLOCK)
-(insn # 0 0 4 (use (reg/i:SI 0 ax)) "test.c":19#
-     (nil))
 (note # 0 0 NOTE_INSN_EPILOGUE_BEG)
-(insn/f # 0 0 4 (parallel [
+(insn/f:TI # 0 0 3 (parallel [
             (set (reg/f:SI 7 sp)
                 (plus:SI (reg/f:SI 6 bp)
                     (const_int 4 [0x4])))
@@ -153,8 +149,28 @@
         (expr_list:REG_CFA_DEF_CFA (plus:SI (reg/f:SI 7 sp)
                 (const_int 4 [0x4]))
             (nil))))
-(jump_insn # 0 0 4 (simple_return) "test.c":19# {simple_return_internal}
+(insn # 0 0 3 (parallel [
+            (set (reg/i:SI 0 ax)
+                (const_int 0 [0]))
+            (clobber (reg:CC 17 flags))
+        ])# {*movsi_xor}
+     (expr_list:REG_UNUSED (reg:CC 17 flags)
+        (nil)))
+(insn # 0 0 3 (use (reg/i:SI 0 ax)) "test.c":19#
+     (nil))
+(jump_insn:TI # 0 0 3 (simple_return) "test.c":19# {simple_return_internal}
      (nil)
  -> simple_return)
+(barrier # 0 0)
+(code_label # 0 0 4 9 (nil) [1 uses])
+(note # 0 0 [bb 4] NOTE_INSN_BASIC_BLOCK)
+(call_insn:TI # 0 0 4 (call (mem:QI (symbol_ref:SI ("__stack_chk_fail") [flags 0x41] <function_decl # __stack_chk_fail>) [ __stack_chk_fail S1 A8])
+        (const_int 0 [0])) "test.c":19# {*call}
+     (expr_list:REG_CALL_DECL (symbol_ref:SI ("__stack_chk_fail") [flags 0x41] <function_decl # __stack_chk_fail>)
+        (expr_list:REG_ARGS_SIZE (const_int 0 [0])
+            (expr_list:REG_NORETURN (const_int 0 [0])
+                (expr_list:REG_EH_REGION (const_int 0 [0])
+                    (nil)))))
+    (nil))
 (barrier # 0 0)
 (note # 0 0 NOTE_INSN_DELETED)
